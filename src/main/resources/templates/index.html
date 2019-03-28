@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>IOT Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link th:href="@{/css/bootstrap.min.css}" rel='stylesheet' type='text/css' media="screen"/>
+
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">IOT Platform</a>
+        </div>
+    </nav>
+    <div class="col-md-2">
+        <ul class="nav nav-tab vertical-tab" role="tablist" id="vtab">
+            <li role="presentation" class="active">
+                <a href="#tab1" aria-controls="home" role="tab"
+                   data-toggle="tab">温度传感器</a>
+            </li>
+            <li role="presentation">
+                <a href="#tab2" aria-controls="inbox" role="tab"
+                   data-toggle="tab">光敏传感器</a>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content vertical-tab-content col-xs-10">
+        <div role="tabpanel" class="tab-pane active" id="tab1">
+            <div id="temp" style="width: 900px;height:600px;"></div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="tab2">
+            <div id="light" style="width: 900px;height:600px;"></div>
+        </div>
+    </div>
+</body>
+    <script type="text/javascript" th:src="@{/js/jquery-1.11.1.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.js}"></script>
+    <script type="text/javascript" th:src="@{/js/echarts.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var myChart = echarts.init(document.getElementById('temp'));
+
+        function fillTemperature(tempdata) {
+            var data = eval ("(" + tempdata + ")");
+            var result = [];
+            var time =[];
+            var value = [];
+            for (var i = 0;i < data.length; i++){
+                var date = new Date(data[i]['name'])
+                // time.push(date);
+                time.push([date.getFullYear(), date .getMonth() + 1, date.getDate()].join('/') + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
+                value.push(data[i]['value']);
+            }
+            result.push(time);
+            result.push(value);
+            return result;
+        }
+
+        var temp = [[${tempData}]];
+        console.log(temp);
+        var tdata = fillTemperature(temp)
+        console.log(tdata);
+        var timedata = tdata[0];
+        var valuedata = tdata[1];
+
+        var option = {
+            title: {
+                text: '温度传感器数据'
+            },
+            xAxis: {
+                type: 'category',
+                splitLine: {
+                    show: false
+                },
+                data: timedata
+            },
+            yAxis: {
+                type: 'value',
+                boundaryGap: [0, '100%'],
+                splitLine: {
+                    show: false
+                }
+            },
+            series: [{
+                name: '模拟数据',
+                type: 'line',
+                smooth: true,
+                showSymbol: false,
+                hoverAnimation: false,
+                data: valuedata
+            }]
+        };
+        setInterval(function () {
+            var newTempData = []
+            $.ajax({url:"/getTempData",success:function(result){
+                    newTempData = fillTemperature(result)
+                    console.log(result)
+                    console.log(newTempData)
+                    myChart.setOption({
+                        xAxis: {
+                            data: newTempData[0]
+                        },
+                        series: [{
+                            data: newTempData[1]
+                        }]
+                    });
+                }});
+        }, 1000);
+        myChart.setOption(option);
+        /*]]>*/
+    </script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var myChart = echarts.init(document.getElementById('light'));
+
+    function fillTemperature(tempdata) {
+        var data = eval ("(" + tempdata + ")");
+        var result = [];
+        var time =[];
+        var value = [];
+        for (var i = 0;i < data.length; i++){
+            var date = new Date(data[i]['name'])
+            // time.push(date);
+            time.push([date.getFullYear(), date .getMonth() + 1, date.getDate()].join('/') + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
+            value.push(data[i]['value']);
+        }
+        result.push(time);
+        result.push(value);
+        return result;
+    }
+
+    var temp = [[${lightData}]];
+    console.log(temp);
+    var tdata = fillTemperature(temp)
+    console.log(tdata);
+    var timedata = tdata[0];
+    var valuedata = tdata[1];
+
+    var option = {
+        title: {
+            text: '光传感器数据'
+        },
+        xAxis: {
+            type: 'category',
+            splitLine: {
+                show: false
+            },
+            data: timedata
+        },
+        yAxis: {
+            type: 'value',
+            boundaryGap: [0, '100%'],
+            splitLine: {
+                show: false
+            }
+        },
+        series: [{
+            name: '模拟数据',
+            type: 'line',
+            smooth: true,
+            showSymbol: false,
+            hoverAnimation: false,
+            data: valuedata
+        }]
+    };
+    setInterval(function () {
+        var newTempData = []
+        $.ajax({url:"/getTempData",success:function(result){
+                newTempData = fillTemperature(result)
+                console.log(result)
+                console.log(newTempData)
+                myChart.setOption({
+                    xAxis: {
+                        data: newTempData[0]
+                    },
+                    series: [{
+                        data: newTempData[1]
+                    }]
+                });
+            }});
+    }, 1000);
+    myChart.setOption(option);
+    /*]]>*/
+</script>
+</html>

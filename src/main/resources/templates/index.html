@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link th:href="@{/css/bootstrap.min.css}" rel='stylesheet' type='text/css' media="screen"/>
-
+    <link th:href="@{/css/bootstrap-datetimepicker.min.css}" rel='stylesheet' type='text/css' media="screen"/>
+    <link th:href="@{/css/bootstrap-theme.min.css}" rel='stylesheet' type='text/css' media="screen"/>
 </head>
 <body>
     <nav class="navbar navbar-default" role="navigation">
@@ -23,6 +24,14 @@
                 <a href="#tab2" aria-controls="inbox" role="tab"
                    data-toggle="tab">光敏传感器</a>
             </li>
+            <li role="presentation">
+                <a href="#tab3" aria-controls="inbox" role="tab"
+                   data-toggle="tab">温度传感器历史数据</a>
+            </li>
+            <li role="presentation">
+                <a href="#tab4" aria-controls="inbox" role="tab"
+                   data-toggle="tab">光敏传感器历史数据</a>
+            </li>
         </ul>
     </div>
     <div class="tab-content vertical-tab-content col-xs-10">
@@ -32,11 +41,190 @@
         <div role="tabpanel" class="tab-pane" id="tab2">
             <div id="light" style="width: 900px;height:600px;"></div>
         </div>
+        <div role="tabpanel" class="tab-pane" id="tab3">
+            <label style="float: left;" >开始时间: </label>
+            <a class='input-group date' id='datetimepicker1' style="float: left;">
+                <input type='text' class="form-control" id='startdate1' style="width: 150px; height: 30px;" />
+                <span class="input-group-addon" style="float: left; width: 50px; height: 30px;">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+            </a>
+            <label style="float: left;">结束时间: </label>
+            <a class='input-group date' id='datetimepicker2' style="float: left;">
+                <input type='text' class="form-control" id='enddate1' style="width: 150px; height: 30px;" />
+                <span class="input-group-addon" style="float: left; width: 50px; height: 30px;">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+            </a>
+            <button class="btn btn-primary" onclick="submitDate()">查找</button>
+            <div id="hist1" style="width: 900px;height:600px;"></div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="tab4">
+            <label style="float: left;" >开始时间: </label>
+            <a class='input-group date' id='datetimepicker3' style="float: left;">
+                <input type='text' class="form-control" id='startdate2' style="width: 150px; height: 30px;" />
+                <span class="input-group-addon" style="float: left; width: 50px; height: 30px;">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+            </a>
+            <label style="float: left;">结束时间: </label>
+            <a class='input-group date' id='datetimepicker4' style="float: left;">
+                <input type='text' class="form-control" id='enddate2' style="width: 150px; height: 30px;" />
+                <span class="input-group-addon" style="float: left; width: 50px; height: 30px;">
+                <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+            </a>
+            <button class="btn btn-primary" onclick="submitDate1()">查找</button>
+            <div id="hist2" style="width: 900px;height:600px;"></div>
+        </div>
     </div>
 </body>
+
     <script type="text/javascript" th:src="@{/js/jquery-1.11.1.min.js}"></script>
     <script type="text/javascript" th:src="@{/js/bootstrap.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap-datetimepicker.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap-datetimepicker.zh-CN.js}"></script>
     <script type="text/javascript" th:src="@{/js/echarts.js}"></script>
+    <script type="text/javascript">
+        $('#datetimepicker1').datetimepicker({
+            language: 'zh-CN',
+            initialDate: new Date(),
+            autoclose: true,
+            format: 'yyyy-mm-dd hh:ii'
+        });
+        $('#datetimepicker2').datetimepicker({
+            language: 'zh-CN',
+            initialDate: new Date(),
+            autoclose: true,
+            format: 'yyyy-mm-dd hh:ii'
+        });
+        $('#datetimepicker3').datetimepicker({
+            language: 'zh-CN',
+            initialDate: new Date(),
+            autoclose: true,
+            format: 'yyyy-mm-dd hh:ii'
+        });
+        $('#datetimepicker4').datetimepicker({
+            language: 'zh-CN',
+            initialDate: new Date(),
+            autoclose: true,
+            format: 'yyyy-mm-dd hh:ii'
+        });
+        function submitDate() {
+            $.post("/getTempHisData", {start:document.getElementById('startdate1').value, end:document.getElementById('enddate1').value}, function (data) {
+                var myChart = echarts.init(document.getElementById('hist1'));
+
+                function fillTemperature(tempdata) {
+                    var data = eval ("(" + tempdata + ")");
+                    var result = [];
+                    var time =[];
+                    var value = [];
+                    for (var i = 0;i < data.length; i++){
+                        var date = new Date(data[i]['name'])
+                        // time.push(date);
+                        time.push([date.getFullYear(), date .getMonth() + 1, date.getDate()].join('/') + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
+                        value.push(data[i]['value']);
+                    }
+                    result.push(time);
+                    result.push(value);
+                    return result;
+                }
+
+                var temp = data;
+                console.log(temp);
+                var tdata = fillTemperature(temp)
+                console.log(tdata);
+                var timedata = tdata[0];
+                var valuedata = tdata[1];
+
+                var option = {
+                    title: {
+                        text: '温度传感器历史数据'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        splitLine: {
+                            show: false
+                        },
+                        data: timedata
+                    },
+                    yAxis: {
+                        type: 'value',
+                        boundaryGap: [0, '100%'],
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: '模拟数据',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: false,
+                        hoverAnimation: false,
+                        data: valuedata
+                    }]
+                };
+                myChart.setOption(option);
+            })
+        }
+        function submitDate1() {
+            $.post("/getLightHisData", {start:document.getElementById('startdate2').value, end:document.getElementById('enddate2').value}, function (data) {
+                var myChart = echarts.init(document.getElementById('hist2'));
+
+                function fillTemperature(tempdata) {
+                    var data = eval ("(" + tempdata + ")");
+                    var result = [];
+                    var time =[];
+                    var value = [];
+                    for (var i = 0;i < data.length; i++){
+                        var date = new Date(data[i]['name'])
+                        // time.push(date);
+                        time.push([date.getFullYear(), date .getMonth() + 1, date.getDate()].join('/') + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
+                        value.push(data[i]['value']);
+                    }
+                    result.push(time);
+                    result.push(value);
+                    return result;
+                }
+
+                var temp = data;
+                console.log(temp);
+                var tdata = fillTemperature(temp)
+                console.log(tdata);
+                var timedata = tdata[0];
+                var valuedata = tdata[1];
+
+                var option = {
+                    title: {
+                        text: '光敏传感器历史数据'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        splitLine: {
+                            show: false
+                        },
+                        data: timedata
+                    },
+                    yAxis: {
+                        type: 'value',
+                        boundaryGap: [0, '100%'],
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: '模拟数据',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: false,
+                        hoverAnimation: false,
+                        data: valuedata
+                    }]
+                };
+                myChart.setOption(option);
+            })
+        }
+    </script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         var myChart = echarts.init(document.getElementById('temp'));
@@ -91,22 +279,22 @@
                 data: valuedata
             }]
         };
-        setInterval(function () {
-            var newTempData = []
-            $.ajax({url:"/getTempData",success:function(result){
-                    newTempData = fillTemperature(result)
-                    console.log(result)
-                    console.log(newTempData)
-                    myChart.setOption({
-                        xAxis: {
-                            data: newTempData[0]
-                        },
-                        series: [{
-                            data: newTempData[1]
-                        }]
-                    });
-                }});
-        }, 1000);
+        // setInterval(function () {
+        //     var newTempData = []
+        //     $.ajax({url:"/getTempData",success:function(result){
+        //             newTempData = fillTemperature(result)
+        //             console.log(result)
+        //             console.log(newTempData)
+        //             myChart.setOption({
+        //                 xAxis: {
+        //                     data: newTempData[0]
+        //                 },
+        //                 series: [{
+        //                     data: newTempData[1]
+        //                 }]
+        //             });
+        //         }});
+        // }, 1000);
         myChart.setOption(option);
         /*]]>*/
     </script>
@@ -164,23 +352,24 @@
             data: valuedata
         }]
     };
-    setInterval(function () {
-        var newTempData = []
-        $.ajax({url:"/getTempData",success:function(result){
-                newTempData = fillTemperature(result)
-                console.log(result)
-                console.log(newTempData)
-                myChart.setOption({
-                    xAxis: {
-                        data: newTempData[0]
-                    },
-                    series: [{
-                        data: newTempData[1]
-                    }]
-                });
-            }});
-    }, 1000);
+    // setInterval(function () {
+    //     var newTempData = []
+    //     $.ajax({url:"/getTempData",success:function(result){
+    //             newTempData = fillTemperature(result)
+    //             console.log(result)
+    //             console.log(newTempData)
+    //             myChart.setOption({
+    //                 xAxis: {
+    //                     data: newTempData[0]
+    //                 },
+    //                 series: [{
+    //                     data: newTempData[1]
+    //                 }]
+    //             });
+    //         }});
+    // }, 1000);
     myChart.setOption(option);
     /*]]>*/
 </script>
+
 </html>
